@@ -2,11 +2,6 @@
   "version": 2,
   "buildCommand": "cd ../.. && pnpm --filter @workspace/api-server run build",
   "installCommand": "cd ../.. && pnpm install",
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "routes": [
     { "src": "/(.*)", "dest": "/api/index.js" }
   ]
