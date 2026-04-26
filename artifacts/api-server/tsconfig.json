@@ -6,7 +6,9 @@
     "types": ["node"],
     "noEmitOnError": false,
     "noImplicitAny": false,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "verbatimModuleSyntax": false
   },
   "include": ["src"],
   "references": [
