@@ -2,7 +2,7 @@ import { Router } from "express";
 import { eq, desc, and } from "drizzle-orm";
 import { db, usersTable, jobsTable, skillsTable, bidsTable, providersTable, providerSkillsTable, walletsTable, walletTransactionsTable } from "@workspace/db";
 import { requireAuth } from "../lib/auth";
-import { broadcastToProviders, broadcastToUser, getOnlineProviderIds } from "../lib/ws";
+import { broadcastToProviders, broadcastToUser, getOnlineProviderIds } from "../lib/sse";
 import { haversineKm } from "../lib/geo";
 import { logger } from "../lib/logger";
 

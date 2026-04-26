@@ -1,7 +1,6 @@
 import http from "http";
 import app from "./app";
 import { logger } from "./lib/logger";
-import { createWsServer } from "./lib/ws";
 import { seedAdmin } from "./lib/seed";
 
 const rawPort = process.env["PORT"] || "8080";
@@ -17,9 +16,8 @@ if (Number.isNaN(port) || port <= 0) {
 }
 
 const server = http.createServer(app);
-createWsServer(server);
 
 server.listen(port, async () => {
-  logger.info({ port }, "Server listening (HTTP + WebSocket)");
+  logger.info({ port }, "Server listening");
   await seedAdmin();
 });

@@ -2,7 +2,7 @@ import { Switch, Route, Redirect, useLocation } from "wouter";
 import { Home, Bell, Briefcase, Wallet, User } from "lucide-react";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/auth";
-import { useWebSocket } from "@/hooks/use-websocket";
+import { useSSE } from "@/hooks/use-sse";
 import ProviderHome from "./ProviderHome";
 import NotificationsPage from "./NotificationsPage";
 import ProviderJobsPage from "./ProviderJobsPage";
@@ -132,7 +132,7 @@ export default function ProviderLayout() {
     }
   }, []);
 
-  useWebSocket(user?.id ?? null, "provider", onMessage, !!user);
+  useSSE(user?.id ?? null, "provider", onMessage, !!user);
 
   const removeNotification = useCallback((jobId: number) => {
     setNotifications((prev) => prev.filter((n) => n.id !== jobId));

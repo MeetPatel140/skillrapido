@@ -7,6 +7,7 @@ import router from "./routes";
 import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import { maintenanceMiddleware } from "./middleware/maintenance";
+import { sseHandler } from "./lib/sse";
 
 if (!process.env.SESSION_SECRET) {
   process.env.SESSION_SECRET = "dev_secret_123";
@@ -57,5 +58,6 @@ app.use(
 
 app.use("/api", maintenanceMiddleware);
 app.use("/api", router);
+app.get("/api/sse", sseHandler);
 
 export default app;
