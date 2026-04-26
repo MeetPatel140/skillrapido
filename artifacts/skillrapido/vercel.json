@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "buildCommand": "cd ../.. && pnpm --filter @workspace/skillrapido run build",
+  "outputDirectory": "dist/public",
+  "installCommand": "cd ../.. && pnpm install",
+  "routes": [
+    { "src": "/assets/(.*)", "dest": "/assets/$1" },
+    { "src": "/(.*\\.(js|css|svg|png|jpg|ico|json|woff|woff2|ttf))", "dest": "/$1" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}

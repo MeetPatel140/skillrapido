@@ -1,12 +1,13 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "dist/index.mjs",
-      "use": "@vercel/node"
+  "buildCommand": "cd ../.. && pnpm --filter @workspace/api-server run build",
+  "installCommand": "cd ../.. && pnpm install",
+  "functions": {
+    "api/index.js": {
+      "runtime": "nodejs20.x"
     }
-  ],
+  },
   "routes": [
-    { "src": "/(.*)", "dest": "dist/index.mjs" }
+    { "src": "/(.*)", "dest": "/api/index.js" }
   ]
 }
