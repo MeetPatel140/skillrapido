@@ -1,0 +1,875 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: SkillRapido - Real-time service marketplace API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User management
+  - name: providers
+    description: Service provider operations
+  - name: jobs
+    description: Job/service request operations
+  - name: bids
+    description: Provider bids on jobs
+  - name: skills
+    description: Skills catalog
+  - name: dashboard
+    description: Dashboard summary stats
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # AUTH
+  /auth/register:
+    post:
+      operationId: registerUser
+      tags: [auth]
+      summary: Register a new user (customer or provider)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # SKILLS CATALOG
+  /skills:
+    get:
+      operationId: listSkills
+      tags: [skills]
+      summary: List all available skills/service categories
+      responses:
+        "200":
+          description: Skills list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Skill"
+
+  # PROVIDER PROFILE
+  /providers/profile:
+    get:
+      operationId: getProviderProfile
+      tags: [providers]
+      summary: Get current provider's profile
+      responses:
+        "200":
+          description: Provider profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderProfile"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      operationId: updateProviderProfile
+      tags: [providers]
+      summary: Update provider profile and skills
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProviderProfileBody"
+      responses:
+        "200":
+          description: Updated provider profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderProfile"
+
+  /providers/availability:
+    put:
+      operationId: updateProviderAvailability
+      tags: [providers]
+      summary: Toggle provider online/offline status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AvailabilityBody"
+      responses:
+        "200":
+          description: Updated availability
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderProfile"
+
+  /providers/location:
+    put:
+      operationId: updateProviderLocation
+      tags: [providers]
+      summary: Update provider's current location
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationBody"
+      responses:
+        "200":
+          description: Location updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /providers/earnings:
+    get:
+      operationId: getProviderEarnings
+      tags: [providers]
+      summary: Get provider earnings summary
+      responses:
+        "200":
+          description: Earnings summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EarningsSummary"
+
+  /providers/jobs:
+    get:
+      operationId: getProviderJobs
+      tags: [providers]
+      summary: Get jobs assigned to the provider
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, completed, all]
+          description: Filter by status
+      responses:
+        "200":
+          description: Provider's jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+
+  # JOBS
+  /jobs:
+    get:
+      operationId: listJobs
+      tags: [jobs]
+      summary: List customer's own job posts
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, assigned, in_progress, completed, cancelled, all]
+      responses:
+        "200":
+          description: Jobs list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+
+    post:
+      operationId: createJob
+      tags: [jobs]
+      summary: Post a new job/service request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJobBody"
+      responses:
+        "201":
+          description: Job created and broadcast to nearby providers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /jobs/{jobId}:
+    get:
+      operationId: getJob
+      tags: [jobs]
+      summary: Get a specific job with details
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobWithBids"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /jobs/{jobId}/cancel:
+    post:
+      operationId: cancelJob
+      tags: [jobs]
+      summary: Cancel an open job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+
+  /jobs/{jobId}/complete:
+    post:
+      operationId: completeJob
+      tags: [jobs]
+      summary: Mark a job as completed
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job completed and payment processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobCompletionResult"
+
+  # BIDS
+  /jobs/{jobId}/bids:
+    get:
+      operationId: getJobBids
+      tags: [bids]
+      summary: Get all bids on a job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bids list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bid"
+
+    post:
+      operationId: acceptJob
+      tags: [bids]
+      summary: Provider accepts/bids on a job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptJobBody"
+      responses:
+        "201":
+          description: Bid placed / job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bid"
+        "409":
+          description: Job already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /jobs/{jobId}/bids/{bidId}/accept:
+    post:
+      operationId: selectBid
+      tags: [bids]
+      summary: Customer selects a bid to assign the job
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: bidId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job assigned to provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+
+  # DASHBOARD SUMMARIES (wow endpoints)
+  /dashboard/customer:
+    get:
+      operationId: getCustomerDashboard
+      tags: [dashboard]
+      summary: Customer dashboard summary
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerDashboard"
+
+  /dashboard/provider:
+    get:
+      operationId: getProviderDashboard
+      tags: [dashboard]
+      summary: Provider dashboard summary
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDashboard"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Recent platform activity feed
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required: [error]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    RegisterBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [customer, provider]
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required: [name, email, password, role]
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/UserProfile"
+        message:
+          type: string
+      required: [user]
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        role:
+          type: string
+          enum: [customer, provider, admin]
+        avatarUrl:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, email, role, createdAt]
+
+    Skill:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        icon:
+          type: string
+        description:
+          type: string
+          nullable: true
+      required: [id, name, category, icon]
+
+    ProviderProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        isOnline:
+          type: boolean
+        isVerified:
+          type: boolean
+        rating:
+          type: number
+          nullable: true
+        totalJobs:
+          type: integer
+        totalEarnings:
+          type: number
+        skills:
+          type: array
+          items:
+            $ref: "#/components/schemas/Skill"
+        latitude:
+          type: number
+          nullable: true
+        longitude:
+          type: number
+          nullable: true
+      required: [id, userId, name, email, isOnline, isVerified, totalJobs, totalEarnings, skills]
+
+    UpdateProviderProfileBody:
+      type: object
+      properties:
+        bio:
+          type: string
+        phone:
+          type: string
+        skillIds:
+          type: array
+          items:
+            type: integer
+        latitude:
+          type: number
+        longitude:
+          type: number
+
+    AvailabilityBody:
+      type: object
+      properties:
+        isOnline:
+          type: boolean
+      required: [isOnline]
+
+    LocationBody:
+      type: object
+      properties:
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required: [latitude, longitude]
+
+    EarningsSummary:
+      type: object
+      properties:
+        totalEarnings:
+          type: number
+        todayEarnings:
+          type: number
+        weekEarnings:
+          type: number
+        monthEarnings:
+          type: number
+        pendingAmount:
+          type: number
+        completedJobs:
+          type: integer
+        averageJobValue:
+          type: number
+      required: [totalEarnings, todayEarnings, weekEarnings, monthEarnings, pendingAmount, completedJobs, averageJobValue]
+
+    CreateJobBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        skillId:
+          type: integer
+        budget:
+          type: number
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        scheduledAt:
+          type: string
+          format: date-time
+          nullable: true
+      required: [title, description, skillId, budget, address, latitude, longitude]
+
+    Job:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, assigned, in_progress, completed, cancelled]
+        budget:
+          type: number
+        commission:
+          type: number
+        providerAmount:
+          type: number
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        scheduledAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        providerId:
+          type: integer
+          nullable: true
+        providerName:
+          type: string
+          nullable: true
+        skill:
+          $ref: "#/components/schemas/Skill"
+        bidCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, title, description, status, budget, commission, providerAmount, address, latitude, longitude, customerId, customerName, skill, bidCount, createdAt]
+
+    JobWithBids:
+      allOf:
+        - $ref: "#/components/schemas/Job"
+        - type: object
+          properties:
+            bids:
+              type: array
+              items:
+                $ref: "#/components/schemas/Bid"
+          required: [bids]
+
+    AcceptJobBody:
+      type: object
+      properties:
+        message:
+          type: string
+      required: []
+
+    Bid:
+      type: object
+      properties:
+        id:
+          type: integer
+        jobId:
+          type: integer
+        providerId:
+          type: integer
+        providerName:
+          type: string
+        providerRating:
+          type: number
+          nullable: true
+        providerTotalJobs:
+          type: integer
+        message:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, jobId, providerId, providerName, providerTotalJobs, status, createdAt]
+
+    JobCompletionResult:
+      type: object
+      properties:
+        job:
+          $ref: "#/components/schemas/Job"
+        customerCharged:
+          type: number
+        providerPaid:
+          type: number
+        appCommission:
+          type: number
+      required: [job, customerCharged, providerPaid, appCommission]
+
+    CustomerDashboard:
+      type: object
+      properties:
+        totalJobsPosted:
+          type: integer
+        openJobs:
+          type: integer
+        completedJobs:
+          type: integer
+        cancelledJobs:
+          type: integer
+        totalSpent:
+          type: number
+        averageJobCost:
+          type: number
+        recentJobs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Job"
+      required: [totalJobsPosted, openJobs, completedJobs, cancelledJobs, totalSpent, averageJobCost, recentJobs]
+
+    ProviderDashboard:
+      type: object
+      properties:
+        isOnline:
+          type: boolean
+        totalEarnings:
+          type: number
+        todayEarnings:
+          type: number
+        completedJobs:
+          type: integer
+        activeJobs:
+          type: integer
+        rating:
+          type: number
+          nullable: true
+        pendingBids:
+          type: integer
+        recentJobs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Job"
+      required: [isOnline, totalEarnings, todayEarnings, completedJobs, activeJobs, pendingBids, recentJobs]
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [job_posted, job_accepted, job_completed, provider_joined]
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        jobId:
+          type: integer
+          nullable: true
+        skillName:
+          type: string
+          nullable: true
+      required: [id, type, message, timestamp]
